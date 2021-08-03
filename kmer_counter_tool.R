@@ -6,7 +6,7 @@ options(warn=-1)
 
 # example command line input to run script with kmer length=4:
 # Rscript kmer_counter_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-kmer-4.tsv'
-# Ex2: Rscript kmer_counter_tool.R 'nonstandard_nucs.fasta' 3 --output_file 'output-kmer-3-NS.tsv'
+# Ex2: Rscript kmer_counter_tool.R 'nonstandard_nucs.fasta' 4 --output_file 'output-kmer-4-NS.tsv'
 # Change the permissions for this script locally to make it executable:
 # chmod +x kmer_counter_tool.R
 
@@ -55,7 +55,7 @@ if (as.integer(argv$kmer_length) <= 0) {
 
 #non_stand_nucs
 non_stand_nucs <- paste0("[", paste(letters[-c(1,3,7,20)], collapse = ""), paste(toupper(letters[-c(1,3,7,20)]), collapse = ""), "]") #bdefhijklmnopqrsuvwxyzBDEFHIJKLMNOPQRSUVWXYZ
-paste0("Non-standard nucleotides include ", non_stand_nucs)
+paste0("This script checks for the following non-standard nucleotides ", non_stand_nucs)
 
 #Group and count each kmer, sort by abundance
 a <- fasta_df$sequence %>%
@@ -73,7 +73,7 @@ a %>%
 if (any(FALSE) %in% a$standard_nucs) {
   print("Warning: Your fasta sequence includes nonstandard nucleic acids")
 } else {
-  print("Great news: Your fasta sequence contains A, C, G, T")
+  print("Great news: Your fasta sequence contains only A, C, G, T")
 }
 
 write_delim(a, argv$output_file, delim = "\t")
