@@ -1,0 +1,186 @@
+---
+title: "Kmer analysis"
+author: "Gabe Mednick"
+date: "7/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+```
+
+
+```{r}
+library("Biostrings")
+library(tidyverse)
+library(gt)
+library(patchwork)
+theme_set(theme_light(base_size=12))
+```
+
+Hi collegue, \
+Thanks for sharing your concern about the sequences
+```{r}
+ex1 = readDNAStringSet('takehome/challenge1/experiment1.fasta')
+ex2 = readDNAStringSet('takehome/challenge1/experiment2.fasta')
+ex3 = readDNAStringSet('takehome/challenge1/experiment3.fasta')
+ex4 = readDNAStringSet('takehome/challenge1/experiment4.fasta')
+ex5 = readDNAStringSet("nonstandard_nucs.fasta")
+
+fasta_files = list(ex1, ex2, ex3, ex4)
+
+convert_to_df <- function(s) {
+seq_name = names(s)
+sequence = paste(s)
+df <- tibble(seq_name, sequence)
+}
+
+fasta_df <- map_df(fasta_files, convert_to_df) 
+fasta_df$seq_name = c('ex1', 'ex2', 'ex3', 'ex4')
+
+# https://github.com/tidyverse/stringr/issues/292
+str_dice <- function(s,length) { # does not return list
+   L <- str_length(s)
+   str_sub(s, start=seq(1L,L-length+1,length), end=seq(length,L,length))
+}
+
+count_kmers <- function(tbl) {
+  tbl %>% 
+    str_dice(length = 4) %>% 
+    tibble() %>% 
+    rename(kmer = ".") %>%
+    count(kmer, sort = T, name = 'kmer_count') %>% 
+    mutate(kmer = fct_reorder(kmer, kmer_count)) %>%
+    mutate(standard_nucs = str_detect(kmer, "[non_stand_nucs]", negate = T))
+}
+
+ex5 <- convert_to_df(ex5)
+
+ex_ns <- ex5$sequence %>% 
+  str_dice(4) %>% tibble() %>% 
+  rename(kmer = ".") 
+
+#non_stand_nucs
+non_stand_nucs <- paste(paste(letters[-c(1,3,7,20)], collapse = ""), paste(toupper(letters[-c(1,3,7,20)]), collapse = "")) #bdefhijklmnopqrsuvwxyzBDEFHIJKLMNOPQRSUVWXYZ
+
+paste0("Non-standard nucleotides include ", non_stand_nucs)
+ 
+```
+
+```{r}
+test <- fasta_df$sequence[1] %>%
+  count_kmers() %>% 
+  mutate(standard_nucs = str_detect(kmer, "[non_stand_nucs]", negate = T))
+
+if (test$standard_nucs == TRUE) {
+  print("Great news: Your fasta sequence contains A, C, G, T")
+} else {
+  print("Warning: Your fasta sequence includes nonstandard nucleic acids")
+}
+
+```
+
+
+```{r}
+seq1 <- fasta_df$sequence[1] %>%
+   count_kmers() %>% 
+   mutate(example = 'Ex1')
+ 
+ seq2 <- fasta_df$sequence[2] %>%
+  count_kmers() %>% 
+   mutate(example = 'Ex2')
+ 
+ seq3 <- fasta_df$sequence[3] %>%
+  count_kmers() %>% 
+   mutate(example = 'Ex3')
+ 
+ seq4 <- fasta_df$sequence[4] %>%
+  count_kmers() %>% 
+   mutate(example = 'Ex4')
+
+sequences <- bind_rows(seq1, seq2, seq3, seq4) 
+
+sequences %>% 
+  pivot_wider(names_from = example, values_from = kmer_count) %>% 
+  head(n=25) %>% 
+  gt() %>%   
+  tab_style(
+    style = list(
+      cell_fill(color = "goldenrod"),
+      cell_text(weight = "bold")
+      ),
+    locations = cells_body(
+    )    
+  )
+```
+
+
+```{r}
+p1 <- fasta_df$sequence[1] %>% 
+  count_kmers() %>% 
+  # mutate(kmer = fct_lump(kmer, n = 25, w = kmer_count)) %>% 
+  # filter(kmer != "Other") %>% 
+  ggplot(aes(kmer_count, kmer, fill = kmer_count)) +
+  geom_col() +
+  scale_fill_viridis_c() +
+  theme(legend.position = 'none') +
+  labs(title = 'Ex1 kmer counts') +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+  
+p2 <- fasta_df$sequence[2] %>% 
+  count_kmers() %>% 
+  # mutate(kmer = fct_lump(kmer, n = 25, w = kmer_count)) %>% 
+  # filter(kmer != "Other") %>% 
+  ggplot(aes(kmer_count, kmer, fill = kmer_count)) +
+  geom_col() +
+  scale_fill_viridis_c() +
+  theme(legend.position = 'none') +
+  labs(title = 'Ex2 kmer counts') +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+p3 <- fasta_df$sequence[3] %>% 
+  count_kmers() %>% 
+  # mutate(kmer = fct_lump(kmer, n = 25, w = kmer_count)) %>% 
+  # filter(kmer != "Other") %>% 
+  ggplot(aes(kmer_count, kmer, fill = kmer_count)) +
+  geom_col() +
+  scale_fill_viridis_c() +
+  theme(legend.position = 'none') +
+  labs(title = 'Ex3 kmer counts') +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+p4 <- fasta_df$sequence[4] %>% 
+  count_kmers() %>% 
+  # mutate(kmer = fct_lump(kmer, n = 25, w = kmer_count)) %>% 
+  # filter(kmer != "Other") %>% 
+  ggplot(aes(kmer_count, kmer, fill = kmer_count)) +
+  geom_col() +
+  scale_fill_viridis_c() +
+  theme(legend.position = 'none') +
+  labs(title = 'Ex4 kmer counts') +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+(p1 + p2) / (p3 + p4)
+```
+
+```{r}
+sequences %>% 
+  group_by(example) %>% 
+  ggplot(aes(kmer_count, fill = example)) +
+  geom_density() +
+  facet_wrap(~example) +
+  scale_fill_viridis_d() +
+  theme(legend.position = 'none') +
+  labs(title = "Density distributions of kmers(4mer) by length",
+       x = "Kmer length",
+       y = "Density")
+```
+
