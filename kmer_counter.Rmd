@@ -1,14 +1,14 @@
 ---
-title: "Kmer analysis"
+title: "Kmer Counter Instructions"
 author: "Gabe Mednick"
-date: "7/30/2021"
+date: "8/3/2021"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 ```
-
+#### This document contains a short analysis of the challenge 1 fasta files (Exp1-4) and provides instructions on how to run the `kmer_counting_tool.R` script.
 
 ```{r}
 library("Biostrings")
@@ -23,13 +23,13 @@ Thanks for sharing your concern about the kmer frequencies in your experiments. 
 
 ## Table of Kmer counts by Experiment
 ```{r}
-ex1 = readDNAStringSet('takehome/challenge1/experiment1.fasta')
-ex2 = readDNAStringSet('takehome/challenge1/experiment2.fasta')
-ex3 = readDNAStringSet('takehome/challenge1/experiment3.fasta')
-ex4 = readDNAStringSet('takehome/challenge1/experiment4.fasta')
-ex5 = readDNAStringSet("nonstandard_nucs.fasta")
+exp1 = readDNAStringSet('takehome/challenge1/experiment1.fasta')
+exp2 = readDNAStringSet('takehome/challenge1/experiment2.fasta')
+exp3 = readDNAStringSet('takehome/challenge1/experiment3.fasta')
+exp4 = readDNAStringSet('takehome/challenge1/experiment4.fasta')
+exp5 = readDNAStringSet("nonstandard_nucs.fasta")
 
-fasta_files = list(ex1, ex2, ex3, ex4)
+fasta_files = list(exp1, exp2, exp3, exp4)
 
 convert_to_df <- function(s) {
 seq_name = names(s)
@@ -38,7 +38,7 @@ df <- tibble(seq_name, sequence)
 }
 
 fasta_df <- map_df(fasta_files, convert_to_df) 
-fasta_df$seq_name = c('ex1', 'ex2', 'ex3', 'ex4')
+fasta_df$seq_name = c('exp1', 'exp2', 'exp3', 'exp4')
 
 # https://github.com/tidyverse/stringr/issues/292
 str_dice <- function(s, length) { # does not return list
@@ -56,9 +56,9 @@ count_kmers <- function(tbl) {
     mutate(standard_nucs = str_detect(kmer, "[non_stand_nucs]", negate = T))
 }
 
-ex5 <- convert_to_df(ex5)
+exp5 <- convert_to_df(exp5)
 
-ex_ns <- ex5$sequence %>% 
+exp_ns_nucs <- exp5$sequence %>% 
   str_dice(4) %>% tibble() %>% 
   rename(kmer = ".") 
  
@@ -68,24 +68,24 @@ ex_ns <- ex5$sequence %>%
 ```{r}
 seq1 <- fasta_df$sequence[1] %>%
    count_kmers() %>% 
-   mutate(example = 'Ex1_counts')
+   mutate(experiment = 'Exp1_counts')
  
  seq2 <- fasta_df$sequence[2] %>%
   count_kmers() %>% 
-   mutate(example = 'Ex2_counts')
+   mutate(experiment = 'Exp2_counts')
  
  seq3 <- fasta_df$sequence[3] %>%
   count_kmers() %>% 
-   mutate(example = 'Ex3_counts')
+   mutate(experiment = 'Exp3_counts')
  
  seq4 <- fasta_df$sequence[4] %>%
   count_kmers() %>% 
-   mutate(example = 'Ex4_counts')
+   mutate(experiment = 'Exp4_counts')
 
 sequences <- bind_rows(seq1, seq2, seq3, seq4) 
 
 sequences %>% 
-  pivot_wider(names_from = example, values_from = kmer_count) %>% 
+  pivot_wider(names_from = experiment, values_from = kmer_count) %>% 
   gt() %>% 
   tab_header(title = md("**Kmer counts by experiment**"),)  %>% 
   tab_options(container.height = 400,
@@ -99,7 +99,7 @@ sequences %>%
 ```
 <br>
 
-The imbalance in kmer counts is easier to observe as a bar plot. Notably, experiments 1 and 2 have the most skewed distributions of kmer counts.  
+The imbalance counts per kmer is easier to observe by looking at the distributions. Notably, experiments 1 and 2 are the most skewed and experiments 3 and 4 are progressively less skewed. Do you know if there was anything different about these two experiments, particularly experiment 4?  
 
 ```{r}
 p1 <- fasta_df$sequence[1] %>% 
@@ -156,30 +156,105 @@ p4 <- fasta_df$sequence[4] %>%
 
 (p1 + p2) / (p3 + p4)
 ```
+```{r}
+#create a summary table with the median, min and max
+sequences %>%
+  group_by(experiment) %>%
+  drop_na() %>%
+  summarize(`median count` = median(kmer_count),
+            `mean count` = round(mean(kmer_count)),
+            `min count` = min(kmer_count),
+            `max count` = max(kmer_count)) %>%
+  gt() %>%
+  tab_header(title = md("**Kmer counts by experiment**"),)  %>%
+  tab_options(container.height = 400,
+              container.overflow.y = TRUE,
+              heading.background.color = "#EFFBFC",
+              table.width = "75%",
+              column_labels.background.color = "black",
+              table.font.color = "black") %>%
+  tab_style(style = list(cell_fill(color = "Grey")),
+            locations = cells_body())
 
-The distributions patterns are more evident when viewed as a density plot. Experiment 4 is your golden ticket. If anything was different with this experiment, you might be able to identify your problem. 
+#this table isn't very helpful
+```
+
+The density plots clearly show the distribution of kmer counts. Experiment 4 is centered around  
 
 ```{r}
 sequences %>% 
-  group_by(example) %>% 
-  ggplot(aes(kmer_count, fill = example)) +
+  group_by(experiment) %>% 
+  ggplot(aes(kmer_count, fill = experiment)) +
   geom_density() +
-  facet_wrap(~example) +
+  facet_wrap(~experiment) +
   scale_fill_viridis_d() +
   theme(legend.position = 'none') +
-  labs(title = "Density distributions of kmers(4mer) by length",
-       x = "Kmer length",
+  labs(title = "Density distributions of kmers(4mer) by count",
+       x = "Kmer count",
+       y = "Density")
+```
+```{r}
+sequences %>% 
+  mutate(kmer_count = as.numeric(kmer_count),
+         counts_bins40_200 = case_when(
+           kmer_count <= 20 ~ as.character('10 and under'),
+           between(kmer_count, 11, 20) ~ as.character('11-20'),
+           between(kmer_count, 21, 30) ~ as.character('21-30'),
+           between(kmer_count, 31, 40) ~ as.character('31-40'),
+           between(kmer_count, 51, 60) ~ as.character('41-50'),
+           between(kmer_count, 61, 70) ~ as.character('41-50'),
+           kmer_count >= 71 ~ as.character('71 and greater'),
+           TRUE ~ 'other'
+         )) %>% 
+  filter(counts_bins40_200 == "10 and under", counts_bins40_200 != '11-20') %>% 
+  group_by(counts_bins40_200) %>% 
+  ggplot(aes(counts_bins40_200, fill = experiment)) +
+  stat_count() +
+  scale_fill_viridis_d() +
+  labs(title = "Density distributions of kmers(4mer) by count",
+       x = "Kmer count",
+       y = "Density")
+
+
+sequences %>% 
+  mutate(kmer_count = as.numeric(kmer_count),
+         counts_bins40_200 = case_when(
+           kmer_count <= 20 ~ as.character('10 and under'),
+           between(kmer_count, 11, 20) ~ as.character('11-20'),
+           between(kmer_count, 21, 30) ~ as.character('21-30'),
+           between(kmer_count, 31, 40) ~ as.character('31-40'),
+           between(kmer_count, 51, 60) ~ as.character('41-50'),
+           between(kmer_count, 61, 70) ~ as.character('41-50'),
+           kmer_count >= 71 ~ as.character('71 and greater'),
+           TRUE ~ 'other'
+         )) %>% 
+  filter(counts_bins40_200 != "10 and under", counts_bins40_200 != '11-20') %>% 
+  group_by(counts_bins40_200) %>% 
+  ggplot(aes(counts_bins40_200, fill = experiment)) +
+  stat_count() +
+  scale_fill_viridis_d() +
+  labs(title = "Density distributions of kmers(4mer) by count",
+       x = "Kmer count",
        y = "Density")
 ```
 
-To help you check for imbalanced kmer distributions in future experiments, I designed a kmer counting analysis tool that works from the command line. The kmer counter let's you input a fasta file and kmer length, and returns a tab separated file of kmer counts ordered by frequency. The program also returns messages about the analysis in the command line. 
+To help you check for imbalanced kmer distributions in future experiments, I designed a kmer counting analysis tool that works from the command line. The kmer counter let's you input a fasta file and kmer length, and returns a tab separated file of kmer counts ordered by frequency. The program also returns messages about the analysis including: \
+* Input sequence length \
+* Kmer length \
+* Which nonstandard nucleotides the program can identify \
+* Whether the kmer length is acceptable for the sequence range \
+* Top 10 kmers by count \
+* Whether the nucleotides are standard or nonstandard \
 
 To use the tool: \
-1. Clone the project from my GitHub repo (https://github.com/gmednick/kmer_analysis_tool) \
-2. From the command line, go to the directory and change the permissions such that the kmer_counter_tool.R script is executable (chmod +x kmer_counter_tool.R) \
-3. Using the following incantation to run the script: \
-Rscript kmer_counter_tool.R 'input_file' kmer-length 'output_file' \
-4. See the example image for expected inputs and outputs (Note: I am working on a mac)
+1. Clone the project from my GitHub repo (https://github.com/gmednick/kmer_analysis_tool) or simply download the directory I sent you \
+2. From the command line, open the directory and change the permissions for kmer_counter_tool.R script to make it executable (chmod +x kmer_counter_tool.R) \
+3. Then run the following incantation in your command line (customize input and output file names): \
 
-![](kmer-tool-bash-img.png)
+e.g.,/
+![](kmer-count-input.png)
+Rscript kmer_counter_tool.R 'input_file' kmer-length 'output_file' \
+4. See the image below for expected output in the command line (Note: I am working on a mac) \
+
+![](kmer-tool-output.png)
 

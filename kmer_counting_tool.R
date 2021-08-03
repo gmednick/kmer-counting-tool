@@ -5,10 +5,10 @@ suppressMessages(library(argparser))
 options(warn=-1)
 
 # example command line input to run script with kmer length=4:
-# Rscript kmer_counter_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-kmer-4.tsv'
-# Ex2: Rscript kmer_counter_tool.R 'nonstandard_nucs.fasta' 4 --output_file 'output-kmer-4-NS.tsv'
+# Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-kmer-4.tsv'
+# Ex2: Rscript kmer_counting_tool.R 'nonstandard_nucs.fasta' 4 --output_file 'output-kmer-4-NS.tsv'
 # Change the permissions for this script locally to make it executable:
-# chmod +x kmer_counter_tool.R
+# chmod +x kmer_counting_tool.R
 
 #define arguments for argparser
 p <- arg_parser("Input: a fasta file and kmer length. Output: A tab separated file with counts per kmer")
@@ -73,7 +73,7 @@ a %>%
 if (any(FALSE) %in% a$standard_nucs) {
   print("Warning: Your fasta sequence includes nonstandard nucleic acids")
 } else {
-  print("Great news: Your fasta sequence contains only A, C, G, T")
+  print("Great news: Your fasta sequence contains only A, C, G, and T")
 }
 
 write_delim(a, argv$output_file, delim = "\t")
