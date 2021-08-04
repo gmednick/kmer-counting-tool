@@ -4,22 +4,25 @@ suppressMessages(library(tidyverse))
 suppressMessages(library(argparser))
 options(warn=-1)
 
-# example command line input to run script with k-mer length=4:
-# Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'exp1-kmer-4.tsv'
-# Ex2: Rscript kmer_counting_tool.R 'takehome/challenge1/nonstandard_nucs.fasta' 4 --output_file 'exp1-kmer-4-nonstandard-nucs.tsv'
-# Change the permissions for this script in the command line to make it executable:
+# Make sure to change the permissions for this script in the command line to make it executable:
 # chmod +x kmer_counting_tool.R
+# example command line input to run script with k-mer length=4
+# Ex1:
+# Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-files/exp1-kmer-4.tsv'
+# Ex2:
+# Rscript kmer_counting_tool.R 'takehome/challenge1/nonstandard_nucs.fasta' 4 --output_file 'output-files/exp1-kmer-4-nonstandard-nucs.tsv'
+
 
 #define arguments for argparser
-p <- arg_parser("Input: a fasta file and k-mer length. Output: A tab separated file with counts per kmer")
-p <- add_argument(p, "input_file", help = "fasta input file")
+p <- arg_parser("Input: a FASTA file and k-mer length. Output: A tab separated file with counts per k-mer")
+p <- add_argument(p, "input_file", help = "FASTA input file")
 p <- add_argument(p, "kmer_length", help = "Choose k-mer length")
 
-p <- add_argument(p, "--output_file", help = "returns a tsv file with k-mer counts sorted by abundance")
+p <- add_argument(p, "--output_file", help = "returns a tsv file with k-mer counts arranged in descending order")
 
 argv <- parse_args(p)
 
-#use Biostrings to import fasta file
+#use Biostrings to import FASTA file
 seq1 = readDNAStringSet(argv$input_file) %>% as.list()
 seq1
 
@@ -53,7 +56,7 @@ if (as.integer(argv$kmer_length) <= 0) {
     print("Good choice! The k-mer length is within the sequence range.")
   }
 
-#non_stand_nucs
+#Nonstandard nucleotide list
 non_stand_nucs <- paste0("[", paste(letters[-c(1,3,7,20)], collapse = ""), paste(toupper(letters[-c(1,3,7,20)]), collapse = ""), "]") #bdefhijklmnopqrsuvwxyzBDEFHIJKLMNOPQRSUVWXYZ
 paste0("This script checks for the following non-standard nucleotides ", non_stand_nucs)
 
@@ -68,11 +71,11 @@ a <- fasta_df$sequence %>%
 a %>%
   select(kmer, length)
 
-#Check for nonstandard nucs (aka, not 'actgACTG')
+#Check for nonstandard nucleotides (aka, not 'actgACTG')
 if (any(FALSE) %in% a$standard_nucs) {
-  print("Warning: Your fasta sequence includes nonstandard nucleic acids")
+  print("Warning: Your FASTA sequence includes nonstandard nucleic acids")
 } else {
-  print("Great news: Your fasta sequence contains only A, C, G, and T")
+  print("Great news: Your FASTA sequence contains only A, C, G, and T")
 }
 
 write_delim(a, argv$output_file, delim = "\t")

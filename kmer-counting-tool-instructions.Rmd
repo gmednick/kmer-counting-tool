@@ -263,15 +263,15 @@ To help you check for imbalanced k-mer distributions in future experiments, I de
 - Which nonstandard nucleotides the program can identify\
 - Whether the k-mer length is acceptable for the sequence range\
 - The top 10 k-mers by count\
-- Whether the given sequence contains standard or nonstandard nucleotides\
+- Whether the given sequence contains standard or nonstandard nucleotides. The nonstandard nucleotide warning can be tested with the following file: takehome/challenge1/nonstandard_nucs.fasta
 
 To use the k-mer counting tool: \
 1. Download the directory I sent you and open it in the command line\
 2. Change the permissions for kmer_counter_tool.R script to make it executable on your machine (chmod +x kmer_counter_tool.R)\
 3. Then run the following incantation in your command line (with custom input and output file names):\
 Rscript kmer_counter_tool.R 'input_file' kmer-length --output_file 'output_file'\
-e.g., ![](kmer-count-input.png) \
+e.g., ![](imgs/kmer-count-input.png) \
 4. See the image below for the expected output in the command line (Note: I am working on a mac). \
 When running the script, a new output file (tab separated format) with k-mers ordered by frequency is generated.\
 
-![](kmer-tool-output.png)
+![](imgs/kmer-tool-output.png)
