@@ -4,7 +4,7 @@ suppressMessages(library(tidyverse))
 suppressMessages(library(argparser))
 options(warn=-1)
 
-# example command line input to run script with kmer length=4:
+# example command line input to run script with k-mer length=4:
 # Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-kmer-4.tsv'
 # Ex2: Rscript kmer_counting_tool.R 'nonstandard_nucs.fasta' 4 --output_file 'output-kmer-4-NS.tsv'
 # Change the permissions for this script locally to make it executable:
@@ -43,7 +43,7 @@ kmer_len <- function(s, length) {
 
 paste0("The kmer length is ", argv$kmer_length)
 
-#Message for out-of-bound kmers (longer or shorter than the input sequence)
+#Message for out-of-bound k-mers (longer or shorter than the input sequence)
 if (as.integer(argv$kmer_length) <= 0) {
   print("The kmer length must be a postive integer greater than 0. Choose a longer kmer.")
 } else
@@ -57,7 +57,7 @@ if (as.integer(argv$kmer_length) <= 0) {
 non_stand_nucs <- paste0("[", paste(letters[-c(1,3,7,20)], collapse = ""), paste(toupper(letters[-c(1,3,7,20)]), collapse = ""), "]") #bdefhijklmnopqrsuvwxyzBDEFHIJKLMNOPQRSUVWXYZ
 paste0("This script checks for the following non-standard nucleotides ", non_stand_nucs)
 
-#Group and count each kmer, sort by abundance
+#Group and count each k-mer, sort by abundance
 a <- fasta_df$sequence %>%
   kmer_len(length = as.numeric(argv$kmer_length)) %>%
   tibble() %>%
