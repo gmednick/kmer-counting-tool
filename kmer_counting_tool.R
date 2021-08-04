@@ -5,17 +5,17 @@ suppressMessages(library(argparser))
 options(warn=-1)
 
 # example command line input to run script with k-mer length=4:
-# Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'output-kmer-4.tsv'
-# Ex2: Rscript kmer_counting_tool.R 'nonstandard_nucs.fasta' 4 --output_file 'output-kmer-4-NS.tsv'
-# Change the permissions for this script locally to make it executable:
+# Rscript kmer_counting_tool.R 'takehome/challenge1/experiment1.fasta' 4 --output_file 'exp1-kmer-4.tsv'
+# Ex2: Rscript kmer_counting_tool.R 'takehome/challenge1/nonstandard_nucs.fasta' 4 --output_file 'exp1-kmer-4-nonstandard-nucs.tsv'
+# Change the permissions for this script in the command line to make it executable:
 # chmod +x kmer_counting_tool.R
 
 #define arguments for argparser
-p <- arg_parser("Input: a fasta file and kmer length. Output: A tab separated file with counts per kmer")
+p <- arg_parser("Input: a fasta file and k-mer length. Output: A tab separated file with counts per kmer")
 p <- add_argument(p, "input_file", help = "fasta input file")
-p <- add_argument(p, "kmer_length", help = "Choose kmer length")
+p <- add_argument(p, "kmer_length", help = "Choose k-mer length")
 
-p <- add_argument(p, "--output_file", help = "returns a tsv file with kmer counts sorted by abundance")
+p <- add_argument(p, "--output_file", help = "returns a tsv file with k-mer counts sorted by abundance")
 
 argv <- parse_args(p)
 
@@ -41,16 +41,16 @@ kmer_len <- function(s, length) {
   str_sub(s, start=seq(1L,L-length+1,length), end=seq(length,L,length))
 }
 
-paste0("The kmer length is ", argv$kmer_length)
+paste0("The k-mer length is ", argv$kmer_length)
 
 #Message for out-of-bound k-mers (longer or shorter than the input sequence)
 if (as.integer(argv$kmer_length) <= 0) {
-  print("The kmer length must be a postive integer greater than 0. Choose a longer kmer.")
+  print("The k-mer length must be a postive integer greater than 0. Choose a longer k-mer.")
 } else
   if (as.integer(argv$kmer_length) > nchar(fasta_df$sequence)) {#the length of the FASTA record
-    print("The kmer length is greater than the length of the input sequence. Choose a shorter kmer.")
+    print("The k-mer length is greater than the length of the input sequence. Choose a shorter k-mer.")
   } else {
-    print("Good choice! The kmer length is within the sequence range.")
+    print("Good choice! The k-mer length is within the sequence range.")
   }
 
 #non_stand_nucs
@@ -69,7 +69,6 @@ a %>%
   select(kmer, length)
 
 #Check for nonstandard nucs (aka, not 'actgACTG')
-#a$standard_nucs[30] = FALSE
 if (any(FALSE) %in% a$standard_nucs) {
   print("Warning: Your fasta sequence includes nonstandard nucleic acids")
 } else {
